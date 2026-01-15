@@ -9,7 +9,7 @@ function main()
 
     % else leave this
     load("dataset.mat")
-    disp(dataset)
+    disp(dataset);
 
 endfunction
 

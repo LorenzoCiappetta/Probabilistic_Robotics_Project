@@ -7,17 +7,38 @@ function dataset = parse_data (filename)
     dataset = cell();
 
     while c != -1
-        #disp(strfind(c, "KF:"));
+        % readline
         l = strsplit(c);
+
+        % fill dataset structure
         if strcmp(l{1}, "KF:")
             id = str2num(l{2})+1;
-            camera.position = zeros(1,6);
-            camera.keypoints = cell();
-            for i=1:6
+
+            % initialize position
+            camera.position = zeros(1,3);
+
+            % fill position
+            quat = zeros(1,3);
+            for i=1:3
                 camera.position(i) = str2num(l{i+2});
+                quat(i) =str2num(l{i+5});
             end
+
+            % compute rotation quaternion
+	        n = norm(quat)^2;
+	        if (n > 1)
+	            camera.quaternion = [1, 0, 0, 0];
+            else
+	            qw = sqrt(1 - n);
+	            camera.quaternion = [qw, quat(1), quat(2), quat(3)]; 
+            end
+
+            % initialize keypoints
+            camera.keypoints = cell();
+
             dataset{id} = camera;
         else
+            % fill keypoints
             n = str2num(l{2})+1;
             m = str2num(l{3});
             keypoint.id = m;
