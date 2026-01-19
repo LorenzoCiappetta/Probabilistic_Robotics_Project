@@ -35,7 +35,9 @@ function dataset = parse_data (filename)
 
             % initialize keypoints
             camera.keypoints.ids = cell();
+            camera.keypoints.associations = zeros(1,100)
             camera.keypoints.vectors = cell();
+
             k = 1;
 
             dataset{id} = camera;
@@ -49,9 +51,9 @@ function dataset = parse_data (filename)
             n = str2num(l{2})+1;
             m = str2num(l{3});
             dataset{id}.keypoints.ids{k} = m;
+            dataset{id}.keypoints.associations(m-100) = k;
             dataset{id}.keypoints.vectors{k} = zeros(1,3);
             
-
             for i=1:3
                 dataset{id}.keypoints.vectors{k}(i) = str2num(l{i+3});
             endfor
