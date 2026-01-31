@@ -30,6 +30,30 @@ function E = estimateEssential(P1_img, P2_img, use_preconditioning=false)
   E=A1'*Ea*A2;
 endfunction
 
+function plotCameras2D(poses)
+  fig = figure();
+  v = [0; 0; 1];
+
+  for i=1:length(poses)
+    pose = poses{i}.global;
+    x = pose(1, 4);
+    y = pose(2, 4);
+    R = pose(1:3, 1:3);
+    d = R*v;
+
+    plot(x, y, "bo");
+    hold on;
+    quiver(x, y, d(1), d(2));
+    hold on;
+
+  endfor
+
+  xlabel("x");
+  ylabel("y");
+  title("2D View of camera poses");
+
+endfunction
+
 function main()
     
     %% Load dataset
@@ -77,7 +101,7 @@ function main()
         points2 = points2(as2, :).';
 
         % use points to estimate Essential Matrix
-        E = estimateEssential(points1, points2);
+        E = estimateEssential(points1, points2, true);
 
         % use essential to estimate transformation
         [X1, X2] = essential2transform(E); 
@@ -131,6 +155,9 @@ function main()
         transforms{i+1}.global = transforms{i}.global*final;
 
     endfor
+
+    plotCameras2D(transforms);
+    pause;
 
 endfunction
 
