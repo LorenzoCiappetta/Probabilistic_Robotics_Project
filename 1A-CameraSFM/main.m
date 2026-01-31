@@ -40,7 +40,7 @@ function main()
     % save("dataset.mat")
 
     % else leave this
-    load("dataset.mat")
+    load("dataset.mat");
     %disp(dataset);
 
     % save all the "results" in a cell array (w.r.t. first camera and previous camera)
@@ -76,19 +76,6 @@ function main()
         points1 = points1(as1, :).';
         points2 = points2(as2, :).';
 
-        % Plot points (quite janky)
-        % hf = figure();
-        % plot3(points1(1,:), points1(2,:), points1(3,:), 'o');
-        % xlabel("x")
-        % ylabel("y")
-        % zlabel("z")
-        % title(strcat("Keypoints from camera ", num2str(i)))
-        % print (hf, strcat(strcat("./plots/plot",num2str(i)), ".pdf"), "-dpdflatexstandalone");
-
-        % pause;
-
-        % TODOs:
-
         % use points to estimate Essential Matrix
         E = estimateEssential(points1, points2);
 
@@ -102,9 +89,46 @@ function main()
         t1 = X1(1:3, 4);
         t2 = X2(1:3, 4);
 
-        
-        % Does it make any sense to use least squares afterwards?
-        % Is RANSAC needed or are the associations good already?
+        tran = {[R1, t1], [R1, t2], [R2, t1 ], [R2, t2]};
+
+        % Compute two rotation options for points2 seen from camera 1
+        points2_1 = R1*points2;
+        points2_2 = R2*points1;
+
+        % keep track of tests
+        record = zeros(1,4);
+
+        % triangulate points for all 4 options
+        % count how many points are IN FRONT of camera z>0
+        for j=1:size(points1)(2)
+          [success, p, e] = triangulatePoint(t1, points1(:, j), points2_1(:, j));
+          if success && p(3) > 0
+            record(1) += 1;
+          endif
+
+          [success, p, e] = triangulatePoint(t2, points1(:, j), points2_1(:, j));
+          if success && p(3) > 0
+            record(2) += 1;
+          endif          
+
+          [success, p, e] = triangulatePoint(t1, points1(:, j), points2_2(:, j));
+          if success && p(3) > 0
+            record(3) += 1;
+          endif
+
+          [success, p, e] = triangulatePoint(t2, points1(:, j), points2_2(:, j));
+          if success && p(3) > 0
+            record(4) += 1;
+          endif          
+
+        endfor
+
+        % Tranformation from camera 1 to camera 2
+        [~, index] = max(record);
+        final = [tran{index}; 0 0 0 1];
+
+        transforms{i+1}.local = final;
+        transforms{i+1}.global = transforms{i}.global*final;
 
     endfor
 
